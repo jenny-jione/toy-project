@@ -1,7 +1,7 @@
 # toy-project
 
 ## TODO
-- [ ] decorator 사용해서 elapsed time 측정 및 출력하는 모듈 구현
+- [v] decorator 사용해서 elapsed time 측정 및 출력하는 모듈 구현
 
 ## 코드 설명
 ### lt.py
