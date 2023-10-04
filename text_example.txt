@@ -1,0 +1,14 @@
+Elapsed time(stack): 1.9818
+Elapsed time(recur): 1.8541
+
+Elapsed time(stack): 1.9538
+Elapsed time(recur): 1.8539
+
+Elapsed time(stack): 1.9895
+Elapsed time(recur): 1.9353
+
+Elapsed time(stack): 1.9777
+Elapsed time(recur): 1.846
+
+Elapsed time(stack): 1.9806
+Elapsed time(recur): 1.8899
