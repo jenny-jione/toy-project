@@ -2,3 +2,4 @@ test/
 __pycache__
 venv_crawl/
 *.csv
+*.log
