@@ -70,7 +70,7 @@ def get_data(driver: webdriver.Chrome, page: int):
         td_recommand = tr.find_element(By.CLASS_NAME, "gall_recommend")
         recommand_count = int(td_recommand.text)
 
-        result.append([title, reply_count, post_date, view_count, recommand_count, href])
+        result.append([title, post_date, view_count, recommand_count, reply_count, href])
         # 확인용 print문. 생략 가능
         # print(result[-1][:-1])
     return result
@@ -81,8 +81,7 @@ def save_file(data: list, mode: str):
         # 제목, 댓글수, 작성일, 조회수, 추천수, 게시물 링크
         with open(f'result_{gallery_name}.csv', 'w') as f:
             wr = csv.writer(f)
-            # wr.writerow(['title', 'reply', 'date', 'view', 'recommand', 'link'])
-            wr.writerow(['제목', '댓글수', '작성일', '조회수', '추천수', '링크'])
+            wr.writerow(['제목', '작성일', '조회수', '추천수', '댓글수', '링크'])
             for row in data:
                 wr.writerow(row)
 
