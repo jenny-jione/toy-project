@@ -1,7 +1,7 @@
 # 갤러리 크롤링 (2024.4.14)
 """
 TODO
-1. 관심없는 키워드가 들어간 글은 아예 건너뛰거나 따로 표시하기
+1. 관심없는 키워드가 들어간 글은 아예 건너뛰거나 따로 표시하기 ==> filtering.py로 구현함
 2. 반대수는 각각의 글을 직접 들어가야 알 수 있는 거라서.. 이건 생각해보기
 3. save_file 안에 매번 with open 하지 말고 밖에서 exist 확인해서 save_file의 파라미터로 wr 가져가기
 4. 크롤링 중에 종료되는 경우가 있는데 자동으로 재시작할 수 있는 방법 없나??
@@ -25,7 +25,6 @@ def get_total_page(driver: webdriver.Chrome, gallery_name: str):
     print(f'get total page .. gallery name: {gallery_name}')
     url = f'https://gall.dcinside.com/mgallery/board/lists/?id={gallery_name}&exception_mode=recommend'
     driver.get(url)
-    print('driver get complete')
     print('find element .. ')
     page_end_tag = driver.find_element(By.CLASS_NAME, "sp_pagingicon.page_end")
     href = page_end_tag.get_attribute('href')
@@ -39,7 +38,6 @@ def get_data(driver: webdriver.Chrome, gallery_name: str, page: int):
     print(f'page={page} crawling ...')
     url=f'https://gall.dcinside.com/mgallery/board/lists/?id={gallery_name}&page={page}&exception_mode=recommend'
     driver.get(url)
-    print('driver get')
     time.sleep(TIME_SLEEP)
 
     # table 찾기
@@ -47,7 +45,7 @@ def get_data(driver: webdriver.Chrome, gallery_name: str, page: int):
 
     # 글 목록 (trs: 한 페이지 안에 있는 모든 글의 리스트)
     trs = table_tag.find_elements(By.CLASS_NAME, "ub-content.us-post")
-    print(len(trs))
+    print(f'{len(trs)} data were crawled.')
 
     result = []
     # 목록 순회. tr은 한 행(개념글 하나)
@@ -112,27 +110,28 @@ def save_file(data: list, gallery_name: str, mode: str):
 
 if __name__ == "__main__":
 
-    test_mode = True
+    test_mode = False
     gallery_name = input()
+    print(f'test_mode?', test_mode)
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
+    print('driver ...')
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     total_page = get_total_page(driver, gallery_name)
-    print(total_page)
+    print(f'total {total_page} page')
 
     # 특정 페이지 크롤링 (테스트용)
     if test_mode:
         data = get_data(driver, gallery_name, total_page)
         save_file(data, gallery_name, 'w')
+        print('crawling finished.')
         driver.quit()
     
     # 1~total_page 전체 페이지 크롤링
     else:
-        options = webdriver.ChromeOptions()
-        options.add_argument('headless')
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-        
         log_file = open(f'log_crawling_{gallery_name}.txt', 'a')
+
+        print('[ crawling start ]')
 
         for page in range(total_page, 0, -1):
             data = get_data(driver, gallery_name, page)
