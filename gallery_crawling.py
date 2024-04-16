@@ -5,6 +5,8 @@ TODO
 2. 반대수는 각각의 글을 직접 들어가야 알 수 있는 거라서.. 이건 생각해보기
 3. save_file 안에 매번 with open 하지 말고 밖에서 exist 확인해서 save_file의 파라미터로 wr 가져가기
 4. 크롤링 중에 종료되는 경우가 있는데 자동으로 재시작할 수 있는 방법 없나??
+5. 크롤링 시작 전에 전체 페이지 수 구하는 부분 추가하기 ==> 완료
+6. 이미 있는 csv 파일의 경우 헤더 추가 코드 없음. 새로 csv 파일을 생성하는 경우에만 header 넣기
 """
 
 from selenium import webdriver
@@ -14,12 +16,26 @@ from webdriver_manager.chrome import ChromeDriverManager
 import csv
 import time
 from datetime import datetime
+import re
 
 TIME_SLEEP = 0.3
 
-gallery_name=input()
 
-def get_data(driver: webdriver.Chrome, page: int):
+def get_total_page(driver: webdriver.Chrome, gallery_name: str):
+    print(f'get total page .. gallery name: {gallery_name}')
+    url = f'https://gall.dcinside.com/mgallery/board/lists/?id={gallery_name}&exception_mode=recommend'
+    driver.get(url)
+    print('driver get complete')
+    print('find element .. ')
+    page_end_tag = driver.find_element(By.CLASS_NAME, "sp_pagingicon.page_end")
+    href = page_end_tag.get_attribute('href')
+    pattern = r'\d+'
+    regex_result = re.findall(pattern, href)
+    total_page = int(regex_result[0])
+    return total_page
+
+
+def get_data(driver: webdriver.Chrome, gallery_name: str, page: int):
     print(f'page={page} crawling ...')
     url=f'https://gall.dcinside.com/mgallery/board/lists/?id={gallery_name}&page={page}&exception_mode=recommend'
     driver.get(url)
@@ -76,17 +92,17 @@ def get_data(driver: webdriver.Chrome, page: int):
     return result
         
 
-def save_file(data: list, mode: str):
+def save_file(data: list, gallery_name: str, mode: str):
+    filename = f'result_{gallery_name}'
     if mode == 'w':
-        # 제목, 댓글수, 작성일, 조회수, 추천수, 게시물 링크
-        with open(f'result_{gallery_name}.csv', 'w') as f:
+        with open(f'{filename}_test.csv', 'w') as f:
             wr = csv.writer(f)
             wr.writerow(['제목', '작성일', '조회수', '추천수', '댓글수', '링크'])
             for row in data:
                 wr.writerow(row)
 
     elif mode == 'a':
-        with open(f'result.csv', 'a') as f:
+        with open(f'{filename}.csv', 'a') as f:
             wr = csv.writer(f)
             for row in data:
                 wr.writerow(row)
@@ -96,20 +112,21 @@ def save_file(data: list, mode: str):
 
 if __name__ == "__main__":
 
-    test_mode = False
+    test_mode = True
+    gallery_name = input()
+    options = webdriver.ChromeOptions()
+    options.add_argument('headless')
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    total_page = get_total_page(driver, gallery_name)
+    print(total_page)
 
     # 특정 페이지 크롤링 (테스트용)
     if test_mode:
-        options = webdriver.ChromeOptions()
-        options.add_argument('headless')
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-        data = get_data(driver, 266)
-
-        save_file(data, 'w')
+        data = get_data(driver, gallery_name, total_page)
+        save_file(data, gallery_name, 'w')
         driver.quit()
-
     
-    # 1~266 전체 페이지 크롤링
+    # 1~total_page 전체 페이지 크롤링
     else:
         options = webdriver.ChromeOptions()
         options.add_argument('headless')
@@ -117,10 +134,9 @@ if __name__ == "__main__":
         
         log_file = open(f'log_crawling_{gallery_name}.txt', 'a')
 
-        # TODO: 266은 바뀔 수 있는 값이기 때문에 나중에 코드 수정 필요함
-        for page in range(76, 0, -1):
-            data = get_data(driver, page)
-            save_file(data, 'a')
+        for page in range(total_page, 0, -1):
+            data = get_data(driver, gallery_name, page)
+            save_file(data, gallery_name, 'a')
             current_time: datetime = datetime.now()
             formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
             log_file.write(formatted_time + '\t' + str(page) + ' page\n')
