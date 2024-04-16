@@ -9,6 +9,7 @@ TODO
 6. 이미 있는 csv 파일의 경우 헤더 추가 코드 없음. 새로 csv 파일을 생성하는 경우에만 header 넣기 ==> 완료
 7. 작성자 ip도 크롤링할지??
 8. 클래스화 ??
+9. 이미 수집한 csv 파일 특정 열 기준으로 정렬하는 함수 작성하기 result_{gallery_name}_sorted_by_{정렬기준}.csv
 """
 
 from selenium import webdriver
