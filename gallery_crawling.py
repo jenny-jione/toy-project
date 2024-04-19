@@ -136,12 +136,11 @@ if __name__ == "__main__":
     options.add_argument('headless')
     print('driver ...')
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    total_page = get_total_page(driver, gallery_name)
-    print(f'total {total_page} page')
-
+    
     # 특정 페이지 크롤링 (테스트용)
     if test_mode:
-        data = get_data(driver, gallery_name, total_page)
+        test_page_num = 1
+        data = get_data(driver, gallery_name, test_page_num)
         save_file(data, gallery_name, mode='test')
         print('crawling successfully finished.')
         driver.quit()
@@ -151,6 +150,9 @@ if __name__ == "__main__":
         log_file = open(f'log_crawling_{gallery_name}.txt', 'a')
 
         print('[ crawling start ]')
+        # 전체 페이지 크롤링할 때만 total_page가 필요하므로
+        total_page = get_total_page(driver, gallery_name)
+        print(f'total {total_page} page')
 
         # for page in range(total_page, 0, -1):
         for page in range(total_page, total_page-2, -1):
