@@ -7,9 +7,10 @@ TODO
 4. 크롤링 중에 종료되는 경우가 있는데 자동으로 재시작할 수 있는 방법 없나??
 5. 크롤링 시작 전에 전체 페이지 수 구하는 부분 추가하기 ==> 완료
 6. 이미 있는 csv 파일의 경우 헤더 추가 코드 없음. 새로 csv 파일을 생성하는 경우에만 header 넣기 ==> 완료
-7. 작성자 ip도 크롤링할지??
+7. 작성자 ip도 크롤링할지?? ==> 완료
 8. 클래스화 ??
 9. 이미 수집한 csv 파일 특정 열 기준으로 정렬하는 함수 작성하기 result_{gallery_name}_sorted_by_{정렬기준}.csv
+10. test_mode일 때는 total_page 구하지 않는다.
 """
 
 from selenium import webdriver
@@ -80,6 +81,11 @@ def get_data(driver: webdriver.Chrome, gallery_name: str, page: int):
         td_date = tr.find_element(By.CLASS_NAME, "gall_date")
         post_date = td_date.text
 
+        # 작성자
+        td_writer = tr.find_element(By.CLASS_NAME, "gall_writer.ub-writer")
+        nickname = td_writer.get_attribute('data-nick')
+        ip = td_writer.get_attribute('data-ip')
+
         # 조회수
         td_view = tr.find_element(By.CLASS_NAME, "gall_count")
         view_count = int(td_view.text)
@@ -88,15 +94,16 @@ def get_data(driver: webdriver.Chrome, gallery_name: str, page: int):
         td_recommand = tr.find_element(By.CLASS_NAME, "gall_recommend")
         recommand_count = int(td_recommand.text)
 
-        result.append([title, post_date, view_count, recommand_count, reply_count, href])
+        result.append([title, post_date, nickname, ip, view_count, recommand_count, reply_count, href])
         # 확인용 print문. 생략 가능
         # print(result[-1][:-1])
+        # print(result[-1][:2]+result[-1][4:-1])
     return result
         
 
 def save_file(data: list, gallery_name: str, mode: str):
     filename = f'result_{gallery_name}'
-    HEADER = ['제목', '작성일', '조회수', '추천수', '댓글수', '링크']
+    HEADER = ['제목', '작성일', '닉네임', '아이피', '조회수', '추천수', '댓글수', '링크']
     if mode == 'test':
         with open(f'{filename}_test.csv', 'w') as f:
             wr = csv.writer(f)
@@ -122,7 +129,7 @@ def save_file(data: list, gallery_name: str, mode: str):
 
 if __name__ == "__main__":
 
-    test_mode = False
+    test_mode = True
     print(f'test_mode?', test_mode)
     gallery_name = input()
     options = webdriver.ChromeOptions()
