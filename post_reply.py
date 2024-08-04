@@ -13,7 +13,7 @@
     - 댓글 작성 날짜
 
 TODO
-1. 멘션의 경우 그 댓글 하위로 옮겨가게 하기
+1. 멘션의 경우 그 댓글 하위로 옮겨가게 하기 -> 2024.8.4 완료
     1
     2
     3
@@ -46,6 +46,7 @@ URL_LOGIN = os.getenv('URL_LOGIN')
 URL_MYPAGE = os.getenv('URL_MYPAGE')
 URL = os.getenv('URL')
 DOCUMENT_HEADER = os.getenv('DOCUMENT_HEADER')
+SEP = os.getenv('SEP')
 
 
 def get_page_data(driver: webdriver.Chrome):
@@ -120,6 +121,51 @@ def get_cur_reply_page(driver: webdriver.Chrome):
     print('len:', len(result))
     return result
 
+# 대댓글 찾는 함수 (더이상 대댓글이 없을 때까지 재귀호출됨)
+# TODO: wr변수가 csv.writer(f)인데 파라미터로 보낼 때 타입 힌팅 하는 법
+def search_child(cur: int, rereply_info: dict, depth: int, reply_data: list, wr):
+    rn, rd, rt = reply_data[cur]
+    child_cnt = len(rereply_info[cur]['child'])
+    row = [rn, rd, 'ㄴ'*depth + rt, child_cnt]
+    wr.writerow(row)
+    if not rereply_info[cur]['child']:
+        return
+    for my_child in rereply_info[cur]['child']:
+        search_child(my_child, rereply_info, depth+1, reply_data, wr)
+    return
+
+# 
+def process_rereply(filename):
+    rereply_info = {}
+    with open(f'{filename}.csv', 'r') as f:
+        rdr = csv.reader(f)
+        reply_data = [row for row in rdr]
+    cnt = len(reply_data)
+    rereply_info = {i:{'parent': [], 'child': []} for i in range(1, cnt)}
+    for row in reply_data[1:]:
+        rnum, rdate, rtxt = row
+        rnum = int(rnum)
+        # 글자 없이 이미지만 올릴 경우 rtxt가 빈 문자열임.
+        if not rtxt:
+            continue
+        if rtxt[0] == '☞':
+            parent_num = int(rtxt.split(SEP)[0].strip('☞'))
+            child_num = rnum
+            rereply_info[parent_num]['child'].append(child_num)
+            rereply_info[child_num]['parent'].append(parent_num)
+    
+    with open(f'{filename}__rereply.csv', 'w') as f2:
+        wr = csv.writer(f2)
+        # 헤더: 댓글 번호, 댓글 작성시각, 댓글 내용, 대댓글 개수
+        header = ['no', 'date', 'comment', 'rereply_count']
+        wr.writerow(header)
+        for rnum, value in rereply_info.items():
+            if not value['parent']:
+                # child(대댓글)가 존재할 경우 대댓글 찾기 함수 호출 (재귀호출됨)
+                if value['child']:
+                    search_child(rnum, rereply_info, 0, reply_data, wr)
+                else:
+                    wr.writerow([*reply_data[rnum], 0])
 
 if __name__ == "__main__":
 
@@ -175,11 +221,12 @@ if __name__ == "__main__":
 
     today_str = datetime.today().strftime('%Y-%m-%d_%H-%M-%S')
     uid = url.split('/')[-1]
-    with open(f'result_{today_str}_{uid}.csv', 'w') as f:
+    filename = f'result_{today_str}_{uid}'
+    with open(f'{filename}.csv', 'w') as f:
         wr = csv.writer(f)
-        # header = ['idx', 'category', 'title', 'post_date', 'reply_num', 'link']
-        # wr.writerow(header)
-        
+        header = ['no', 'date', 'comment']
+        wr.writerow(header)
+
         for rd in reply_data:
             wr.writerow(rd)
     
@@ -187,3 +234,6 @@ if __name__ == "__main__":
     print(f'saving {len(reply_data)} data finished.')
 
     driver.quit()
+
+    process_rereply(filename)
+    print('processing rereply successfully finished.')
