@@ -113,9 +113,9 @@ def get_cur_reply_page(driver: webdriver.Chrome):
         #     'reply_content': reply_content,
         # }
         # result.append(reply_info)
-        keywords = ['ㅅ', '삭제된 댓글입니다', '스크랩']
-        if any(keyword in reply_content for keyword in keywords) or len(reply_content)<10:
-            continue
+        # keywords = ['ㅅ', '삭제된 댓글입니다', '스크랩']
+        # if any(keyword in reply_content for keyword in keywords):# or len(reply_content)<10:
+        #     continue
         result.append([reply_num, reply_date, reply_content])
     print('len:', len(result))
     return result
