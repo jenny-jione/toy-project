@@ -23,6 +23,7 @@ TODO
         21
     2
     3
+2. 본문 제목 정보도 넣기. -> 2024.8.5 완료
 """
 
 import os
@@ -203,6 +204,7 @@ if __name__ == "__main__":
 
     # 해당 글 정보
     page_info = get_page_data(driver)
+    title = page_info.get('title')
 
     # 댓글
     # (댓글 수를 100으로 나눈 몫) 만큼 '댓글 더 보기' 눌러야 함
@@ -221,7 +223,7 @@ if __name__ == "__main__":
 
     today_str = datetime.today().strftime('%Y-%m-%d_%H-%M-%S')
     uid = url.split('/')[-1]
-    filename = f'result_{today_str}_{uid}'
+    filename = f'result_{today_str}_{uid}_{title}'
     with open(f'{filename}.csv', 'w') as f:
         wr = csv.writer(f)
         header = ['no', 'date', 'comment']
