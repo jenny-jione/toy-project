@@ -109,6 +109,14 @@ def get_cur_reply_page(driver: webdriver.Chrome):
         # 댓글 내용
         div_comment = li_comment.find_elements(By.TAG_NAME, 'div')[1]
         reply_content = div_comment.text
+        
+        # div 태그의 모든 자식 태그 찾기
+        child_tags = div_meta.find_elements(By.XPATH, './*')  
+        reply_num_vice = ''
+        if len(child_tags) == 3:
+            strong_tag = div_meta.find_element(By.TAG_NAME, 'strong')
+            reply_num_vice = strong_tag.text
+
         # reply_info = {
         #     'reply_num': reply_num,
         #     'reply_date': reply_date,
@@ -118,16 +126,16 @@ def get_cur_reply_page(driver: webdriver.Chrome):
         # keywords = ['ㅅ', '삭제된 댓글입니다', '스크랩']
         # if any(keyword in reply_content for keyword in keywords):# or len(reply_content)<10:
         #     continue
-        result.append([reply_num, reply_date, reply_content])
+        result.append([reply_num, reply_num_vice, reply_date, reply_content])
     print('len:', len(result))
     return result
 
 # 대댓글 찾는 함수 (더이상 대댓글이 없을 때까지 재귀호출됨)
 # TODO: wr변수가 csv.writer(f)인데 파라미터로 보낼 때 타입 힌팅 하는 법
 def search_child(cur: int, rereply_info: dict, depth: int, reply_data: list, wr):
-    rn, rd, rt = reply_data[cur]
+    rn, rv, rd, rt = reply_data[cur]
     child_cnt = len(rereply_info[cur]['child'])
-    row = [rn, rd, 'ㄴ'*depth + rt, child_cnt]
+    row = [rn, rv, rd, 'ㄴ'*depth + rt, child_cnt]
     wr.writerow(row)
     if not rereply_info[cur]['child']:
         return
@@ -144,7 +152,7 @@ def process_rereply(filename):
     cnt = len(reply_data)
     rereply_info = {i:{'parent': [], 'child': []} for i in range(1, cnt)}
     for row in reply_data[1:]:
-        rnum, rdate, rtxt = row
+        rnum, rvice, rdate, rtxt = row
         rnum = int(rnum)
         # 글자 없이 이미지만 올릴 경우 rtxt가 빈 문자열임.
         if not rtxt:
@@ -157,8 +165,8 @@ def process_rereply(filename):
     
     with open(f'{filename}__rereply.csv', 'w') as f2:
         wr = csv.writer(f2)
-        # 헤더: 댓글 번호, 댓글 작성시각, 댓글 내용, 대댓글 개수
-        header = ['no', 'date', 'comment', 'rereply_count']
+        # 헤더: 댓글 번호, 댓글 작성자 식별, 댓글 작성시각, 댓글 내용, 대댓글 개수
+        header = ['no', 'vice', 'date', 'comment', 'rereply_count']
         wr.writerow(header)
         for rnum, value in rereply_info.items():
             if not value['parent']:
@@ -226,7 +234,7 @@ if __name__ == "__main__":
     filename = f'result_{today_str}_{uid}_{title}'
     with open(f'{filename}.csv', 'w') as f:
         wr = csv.writer(f)
-        header = ['no', 'date', 'comment']
+        header = ['no', 'vice' 'date', 'comment']
         wr.writerow(header)
 
         for rd in reply_data:
