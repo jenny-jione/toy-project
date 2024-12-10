@@ -53,28 +53,24 @@ def get_page_data(driver: webdriver.Chrome):
     print(type(trs))
     print(len(trs))
 
+    # 목록 순회
     for tr in trs:
         tds = tr.find_elements(By.TAG_NAME, 'td')[:-1]
         idx = tds[0].text
         td_title = tds[1]
-        # category = td_title.find_element(By.TAG_NAME, 'a').text
         title_raw = td_title.text
         category = title_raw.split(']')[0].strip('[')
-        # reply_num = title_raw.
         splited = title_raw.split('[')
         if len(splited) == 2:
             reply_num = 0
-        """
-        TODO
-        [카테고리이름] 제목 [댓글수] 일 때
-        카테고리이름/제목/댓글수 로 나누는 가장 멋진 코드 짜기
-        근데 댓글이 없는 경우에는
-        [카테고리이름] 제목 
-        으로만 되어 있음
-        """
-        # else:
-            # reply_num = splited[]
-        print(idx, category, title_raw)
+        else:
+            reply_num = splited[-1].strip(']')
+        title = splited[1].split(']')[1].strip()
+        a_tag = td_title.find_elements(By.TAG_NAME, 'a')[1]
+        link = a_tag.get_attribute('href')
+        post_date = tds[2].text
+        result.append([idx, category, title, post_date, reply_num, link])
+    return result
 
 
 def save_file(data: list):
