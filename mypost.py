@@ -116,18 +116,29 @@ if __name__ == "__main__":
     time.sleep(0.3)
     last_page_num = get_last_page(driver)
 
-    result = []
+    cnt = 0
+    log_file = open(f'log_crawling.txt', 'a')
+    today_str = datetime.today().strftime('%Y-%m-%d')
+    with open(f'result_{today_str}.csv', 'a') as f:
+        wr = csv.writer(f)
+        header = ['idx', 'category', 'title', 'post_date', 'reply_num', 'link']
+        wr.writerow(header)
 
-    # for pagenum in range(1, last_page_num+1):
-    for pagenum in range(62, 63):
+    for pagenum in range(1, last_page_num+1):
+    # for pagenum in range(62, 63):
         url = f'{URL}&page={pagenum}'
         driver.get(url)
-        get_page_data(driver)
+        data = get_page_data(driver)
+        save_file(data)
+        current_time: datetime = datetime.now()
+        formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+        str_time_page = f'{formatted_time}\tpage {pagenum}' 
+        log_file.write(str_time_page+'\n')
+        print(f'{str_time_page} crawling success')
+        cnt += len(data)
     
     print('crawling finished.')
-
-    save_file(result)
-    print(f'saving {len(result)} data finished.')
+    print(f'saving {cnt} data finished.')
 
     driver.quit()
 
