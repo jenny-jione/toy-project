@@ -42,16 +42,17 @@ def get_last_page(driver: webdriver.Chrome):
 
 def get_page_data(driver: webdriver.Chrome):
     """
-    크롤링 코드.
+    한 페이지 내의 글 목록 크롤링하는 코드.
 
     리턴값
+    [idx, title, category, post_date, reply_num, link] 리스트 (한 페이지 분량씩 리턴)
     """
 
     table = driver.find_element(By.CLASS_NAME, 'table.table-striped.table-hover')
     tbody = table.find_element(By.TAG_NAME, 'tbody')
     trs = tbody.find_elements(By.TAG_NAME, 'tr')
-    print(type(trs))
-    print(len(trs))
+
+    result = []
 
     # 목록 순회
     for tr in trs:
@@ -75,10 +76,8 @@ def get_page_data(driver: webdriver.Chrome):
 
 def save_file(data: list):
     today_str = datetime.today().strftime('%Y-%m-%d')
-    with open(f'result_{today_str}.csv', 'w') as f:
+    with open(f'result_{today_str}.csv', 'a') as f:
         wr = csv.writer(f)
-        header = ['product_name', 'product_price', 'order_date', 'status']
-        wr.writerow(header)
         for row in data:
             wr.writerow(row)
 
