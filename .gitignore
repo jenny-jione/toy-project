@@ -4,3 +4,4 @@ venv_crawl/
 *.csv
 *.log
 *.txt
+.env
