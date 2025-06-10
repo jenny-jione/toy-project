@@ -24,6 +24,10 @@ TODO
     2
     3
 2. 본문 제목 정보도 넣기. -> 2024.8.5 완료
+3. 필요없는 댓글 필터링 여부 선택하게 하기
+    만약 필요없는 댓글을 크롤링하지 않는다면 대댓글 함수는 안써야함!
+    왜냐면 삭제된 댓글을 멘션한 대댓글이 있다면 KeyError가 나기 때문
+4. gui로 만들어보기 ?
 """
 
 import os
@@ -108,6 +112,19 @@ def get_cur_reply_page(driver: webdriver.Chrome):
 
         # 댓글 내용
         div_comment = li_comment.find_elements(By.TAG_NAME, 'div')[1]
+        img_url = ''
+        # print(reply_num)
+        # img_url = ''
+        # a_tags = div_comment.find_elements(By.TAG_NAME, 'a')
+        # if a_tags:
+        #     for a_tag in a_tags:
+        #         href = a_tag.get_attribute('href')
+        #         if not href:
+        #             continue
+        #         if href.startswith('https://img.the'):
+        #             img_url = href
+        #             break
+
         reply_content = div_comment.text
         
         # div 태그의 모든 자식 태그 찾기
@@ -123,19 +140,19 @@ def get_cur_reply_page(driver: webdriver.Chrome):
         #     'reply_content': reply_content,
         # }
         # result.append(reply_info)
-        # keywords = ['ㅅ', '삭제된 댓글입니다', '스크랩']
-        # if any(keyword in reply_content for keyword in keywords):# or len(reply_content)<10:
-        #     continue
-        result.append([reply_num, reply_num_vice, reply_date, reply_content])
+        keywords = ['ㅅ', '삭제된 댓글입니다', '스크랩']
+        if any(keyword in reply_content for keyword in keywords):# or len(reply_content)<10:
+            continue
+        result.append([reply_num, reply_num_vice, reply_date, reply_content, img_url])
     print('len:', len(result))
     return result
 
 # 대댓글 찾는 함수 (더이상 대댓글이 없을 때까지 재귀호출됨)
 # TODO: wr변수가 csv.writer(f)인데 파라미터로 보낼 때 타입 힌팅 하는 법
 def search_child(cur: int, rereply_info: dict, depth: int, reply_data: list, wr):
-    rn, rv, rd, rt = reply_data[cur]
+    rn, rv, rd, rt, ri = reply_data[cur]
     child_cnt = len(rereply_info[cur]['child'])
-    row = [rn, rv, rd, 'ㄴ'*depth + rt, child_cnt]
+    row = [rn, rv, rd, 'ㄴ'*depth + rt, ri, child_cnt]
     wr.writerow(row)
     if not rereply_info[cur]['child']:
         return
@@ -152,7 +169,7 @@ def process_rereply(filename):
     cnt = len(reply_data)
     rereply_info = {i:{'parent': [], 'child': []} for i in range(1, cnt)}
     for row in reply_data[1:]:
-        rnum, rvice, rdate, rtxt = row
+        rnum, rvice, rdate, rtxt, rurl = row
         rnum = int(rnum)
         # 글자 없이 이미지만 올릴 경우 rtxt가 빈 문자열임.
         if not rtxt:
@@ -166,7 +183,7 @@ def process_rereply(filename):
     with open(f'{filename}__rereply.csv', 'w') as f2:
         wr = csv.writer(f2)
         # 헤더: 댓글 번호, 댓글 작성자 식별, 댓글 작성시각, 댓글 내용, 대댓글 개수
-        header = ['no', 'vice', 'date', 'comment', 'rereply_count']
+        header = ['no', 'vice', 'date', 'comment', 'img_url', 'rereply_count']
         wr.writerow(header)
         for rnum, value in rereply_info.items():
             if not value['parent']:
@@ -232,9 +249,11 @@ if __name__ == "__main__":
     today_str = datetime.today().strftime('%Y-%m-%d_%H-%M-%S')
     uid = url.split('/')[-1]
     filename = f'result_{today_str}_{uid}_{title}'
+    filename = filename[:200]
+
     with open(f'{filename}.csv', 'w') as f:
         wr = csv.writer(f)
-        header = ['no', 'vice' 'date', 'comment']
+        header = ['no', 'vice', 'date', 'comment', 'img_url']
         wr.writerow(header)
 
         for rd in reply_data:
@@ -245,5 +264,5 @@ if __name__ == "__main__":
 
     driver.quit()
 
-    process_rereply(filename)
-    print('processing rereply successfully finished.')
+    # process_rereply(filename)
+    # print('processing rereply successfully finished.')
