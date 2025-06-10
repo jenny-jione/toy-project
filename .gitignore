@@ -6,3 +6,4 @@ venv_crawl/
 *.txt
 .env
 .DS_Store
+*.html
