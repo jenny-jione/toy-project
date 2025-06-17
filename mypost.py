@@ -120,6 +120,7 @@ if __name__ == "__main__":
     driver.get(url=URL_MYPAGE)
     time.sleep(0.3)
     last_page_num = get_last_page(driver)
+    print('last page: ', last_page_num)
 
     cnt = 0
     log_file = open(f'log_crawling.txt', 'a')
@@ -144,6 +145,7 @@ if __name__ == "__main__":
     
     print('crawling finished.')
     print(f'saving {cnt} data finished.')
+    print(f'result_{today_str}.csv')
 
     driver.quit()
 
