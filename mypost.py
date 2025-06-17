@@ -131,7 +131,6 @@ if __name__ == "__main__":
         wr.writerow(header)
 
     for pagenum in range(1, last_page_num+1):
-    # for pagenum in range(62, 63):
         url = f'{URL_MYPAGE}&page={pagenum}'
         driver.get(url)
         data = get_page_data(driver)
