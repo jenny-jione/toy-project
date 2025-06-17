@@ -110,6 +110,12 @@ if __name__ == "__main__":
     driver.find_element(By.CLASS_NAME, "submit.btn.btn-inverse").click()
     time.sleep(0.3)
 
+    # 비밀번호 변경 권장 페이지 닫기
+    driver.find_element(By.ID, "hide-popup-checkbox").click()
+    time.sleep(0.3)
+    driver.find_element(By.ID, "close-popup-btn").click()
+    time.sleep(0.5)
+
     # 작성글 보기 페이지
     driver.get(url=URL_MYPAGE)
     time.sleep(0.3)
