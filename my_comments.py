@@ -148,7 +148,7 @@ if __name__ == "__main__":
     log_file = open(f'log_crawling_my_comments.txt', 'a')
     today_str = datetime.today().strftime('%Y-%m-%d')
 
-    csv_path = f'result_comments_{T_ID}_test.csv'
+    csv_path = f'result_comments_{T_ID}.csv'
     existing_rows = []
     if os.path.exists(csv_path):
         with open(csv_path, 'r', newline='', encoding='utf-8') as f:
