@@ -95,12 +95,10 @@ def get_page_data(driver: webdriver.Chrome):
     return result
 
 
-def save_file(data: list):
-    today_str = datetime.today().strftime('%Y-%m-%d')
-    with open(f'result_comments_{today_str}.csv', 'a') as f:
-        wr = csv.writer(f)
-        for row in data:
-            wr.writerow(row)
+def log(msg):
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(f"[{now}] {msg}")
+    log_file.write(f"[{now}] {msg}\n")
 
 
 if __name__ == "__main__":
@@ -108,21 +106,24 @@ if __name__ == "__main__":
     options = webdriver.ChromeOptions()
     # headless 옵션을 추가하는 순간 계속 NoSuchElementException이 뜨는데 이 둘이 연관이 있나??? 그럴리가 없는데..
     options.add_argument('headless')
-    # 창의 위치
+    
     options.add_argument("--window-position=1000,600")
-    # 창의 크기
     options.add_argument("--window-size=100,50")
 
-    # 
-    print('option ::')
+    print("[INIT] ▶️ Chrome driver options:")
+    print(f"        - headless: {'headless' in options.arguments}")
+    print(f"        - window-position: 1000,600")
+    print(f"        - window-size   : 100x50\n")
+
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
     # # 쿠팡 크롤링 방지 설정을 undefined로 변경
     # driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {"source": """ Object.defineProperty(navigator, 'webdriver', { get: () => undefined }) """})
     
+    print("[INIT] 🚗 Launching browser and accessing login page...")
     driver.get(url=URL_LOGIN)
-    print('driver get url')
-    print('finding login element ... ')
+
+    print("[INIT] 🔍 Finding login elements...")
     driver.implicitly_wait(1)
 
     # 로그인
@@ -141,7 +142,7 @@ if __name__ == "__main__":
     driver.get(url=URL_MY_COMMENT_PAGE)
     time.sleep(0.3)
     last_page_num = get_last_page(driver)
-    print('last page: ', last_page_num)
+    print(f"[INIT] 📄 Last page number: {last_page_num}")
 
     cnt = 0
     log_file = open(f'log_crawling_my_comments.txt', 'a')
@@ -159,27 +160,22 @@ if __name__ == "__main__":
             unique_key = '||'.join(latest_row[3:])
     else:
         header = ['idx', 'category', 'title', 'comment', 'comment_date', 'post_link']
-        wr.writerow(header)
 
     stop = False
     # 새로운 댓글
     new_rows = []
     for pagenum in range(1, last_page_num+1):
+        log(f"▶️ Page {pagenum} crawling...")
+
         url = f'{URL_MY_COMMENT_PAGE}&page={pagenum}'
         driver.get(url)
         data = get_page_data(driver)
-        save_file(data)
-        current_time: datetime = datetime.now()
-        formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-        str_time_page = f'{formatted_time}\tpage {pagenum}' 
-        log_file.write(str_time_page+'\n')
-        print(f'{str_time_page} crawling success')
-        cnt += len(data)
 
         for row in data:
             key = '||'.join(row[3:])
             if key == unique_key:
                 stop = True
+                log("⛔ Unique key found. Stopping crawl.")
                 break
             new_rows.append(row)
         
@@ -197,5 +193,18 @@ if __name__ == "__main__":
     print('crawling finished.')
     print(f'saving {cnt} data finished.')
     print(f'result_{today_str}.csv')
+
+    # 요약 출력
+    print("\n📄 Crawling Summary")
+    print("──────────────────────────────")
+    print(f"🆕 New comments    : {len(new_rows)}")
+    print(f"📦 Existing comments: {len(existing_rows)}")
+    print(f"💾 Total saved      : {len(all_rows)}")
+    log_file.write("\n📄 Crawling Summary\n")
+    log_file.write("──────────────────────────────\n")
+    log_file.write(f"🆕 New comments    : {len(new_rows)}\n")
+    log_file.write(f"📦 Existing comments: {len(existing_rows)}\n")
+    log_file.write(f"💾 Total saved      : {len(all_rows)}\n")
+
 
     driver.quit()
