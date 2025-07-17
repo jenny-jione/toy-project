@@ -22,7 +22,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-# TODO: 같은 id에 대해서는 같은 파일에 새로운 내용만 추가되게 변경
 
 load_dotenv(verbose=True)
 
@@ -147,11 +146,24 @@ if __name__ == "__main__":
     cnt = 0
     log_file = open(f'log_crawling_my_comments.txt', 'a')
     today_str = datetime.today().strftime('%Y-%m-%d')
-    with open(f'result_{today_str}.csv', 'a') as f:
-        wr = csv.writer(f)
+
+    csv_path = f'result_comments_{T_ID}_test.csv'
+    existing_rows = []
+    if os.path.exists(csv_path):
+        with open(csv_path, 'r', newline='', encoding='utf-8') as f:
+            rdr = csv.reader(f)
+            header = next(rdr)
+            for row in rdr:
+                existing_rows.append(row)
+            latest_row = existing_rows[0]
+            unique_key = '||'.join(latest_row[3:])
+    else:
         header = ['idx', 'category', 'title', 'comment', 'comment_date', 'post_link']
         wr.writerow(header)
 
+    stop = False
+    # 새로운 댓글
+    new_rows = []
     for pagenum in range(1, last_page_num+1):
         url = f'{URL_MY_COMMENT_PAGE}&page={pagenum}'
         driver.get(url)
@@ -163,7 +175,25 @@ if __name__ == "__main__":
         log_file.write(str_time_page+'\n')
         print(f'{str_time_page} crawling success')
         cnt += len(data)
+
+        for row in data:
+            key = '||'.join(row[3:])
+            if key == unique_key:
+                stop = True
+                break
+            new_rows.append(row)
+        
+        if stop:
+            break
+
+    # 데이터 저장
+    all_rows = new_rows + existing_rows
+    with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+        wr = csv.writer(f)
+        wr.writerow(header)
+        wr.writerows(all_rows)
     
+
     print('crawling finished.')
     print(f'saving {cnt} data finished.')
     print(f'result_{today_str}.csv')
