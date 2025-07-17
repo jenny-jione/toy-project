@@ -22,6 +22,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
+# TODO: 같은 id에 대해서는 같은 파일에 새로운 내용만 추가되게 변경
 
 load_dotenv(verbose=True)
 
