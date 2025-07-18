@@ -113,7 +113,7 @@ if __name__ == "__main__":
     print("[INIT] ▶️ Chrome driver options:")
     print(f"        - headless: {'headless' in options.arguments}")
     print(f"        - window-position: 1000,600")
-    print(f"        - window-size   : 100x50\n")
+    print(f"        - window-size   : 100x50")
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
