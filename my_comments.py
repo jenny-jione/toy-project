@@ -189,11 +189,6 @@ if __name__ == "__main__":
         wr.writerow(header)
         wr.writerows(all_rows)
     
-
-    print('crawling finished.')
-    print(f'saving {cnt} data finished.')
-    print(f'result_{today_str}.csv')
-
     # 요약 출력
     print("\n📄 Crawling Summary")
     print("──────────────────────────────")
