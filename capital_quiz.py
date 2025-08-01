@@ -3,10 +3,21 @@
 # TODO: 퀴즈 결과를 파일로 저장하기 (복습용)
 # TODO: 틀린 문제에 가중치를 높이는 시스템
 
+import re
 import csv
 import random
 
 QUIZ_COUNT = 10
+
+# 입력값과 정답을 정규화하는 함수
+def normalize(text: str):
+    text = text.lower()
+    text = text.replace(" ", "")
+    text = re.sub(r'[^ㄱ-ㅎ가-힣a-z0-9]', '', text)
+    return text
+
+def is_correct(answer, user_input):
+    return normalize(answer) == normalize(user_input)
 
 with open('./csv/countries_and_capitals.csv', 'r', encoding='utf-8-sig') as f:
     rdr = csv.reader(f)
@@ -43,7 +54,7 @@ with open('./csv/countries_and_capitals.csv', 'r', encoding='utf-8-sig') as f:
         continent, country, capital = data[i]
         answer = input(f"[{i+1}/{QUIZ_COUNT}] {country}의 수도는? ")
 
-        if answer.strip() == capital:
+        if is_correct(capital, answer):
             print(f"✅ 정답입니다! {country}의 수도는 {capital}입니다.\n")
             score += 1
         else:
